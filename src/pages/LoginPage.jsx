@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { QrCode, Lock, User, ArrowRight, Loader2, AlertCircle, ShieldCheck } from 'lucide-react';
+import { QrCode, Lock, User, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function LoginPage() {
   const { login } = useAuth();
-  const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('Admin@123');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -108,13 +108,6 @@ export default function LoginPage() {
           </button>
 
         </form>
-
-        {/* Demo hints */}
-        <div className="mt-8 pt-6 border-t border-slate-100 text-center">
-          <p className="text-xs text-slate-500">
-            Default credentials: <strong className="text-emerald-700 font-mono">admin</strong> / <strong className="text-emerald-700 font-mono">Admin@123</strong>
-          </p>
-        </div>
 
       </div>
     </div>
