@@ -13,8 +13,9 @@ export default function ManageListTab({ onGoToGenerate }) {
   const [loading, setLoading] = useState(true);
   const [statusMsg, setStatusMsg] = useState({ type: '', text: '' });
   
-  // Changing document modal state
+  // Modals state
   const [selectedQRForChange, setSelectedQRForChange] = useState(null);
+  const [previewQR, setPreviewQR] = useState(null); // Full size QR modal
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -39,7 +40,11 @@ export default function ManageListTab({ onGoToGenerate }) {
 
   // Download QR Code PNG (Trimmed exact black QR with no padding or text)
   const handleDownloadQR = (codeId) => {
-    const wrapper = document.getElementById(`qr-wrapper-${codeId}`) || document.getElementById(`qr-wrapper-mobile-${codeId}`);
+    const wrapper = 
+      document.getElementById(`qr-wrapper-modal-${codeId}`) ||
+      document.getElementById(`qr-wrapper-${codeId}`) || 
+      document.getElementById(`qr-wrapper-mobile-${codeId}`);
+
     if (!wrapper) return;
     const canvas = wrapper.querySelector('canvas');
     if (!canvas) return;
@@ -143,7 +148,7 @@ export default function ManageListTab({ onGoToGenerate }) {
         <div>
           <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900">Manage QR List</h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Download your QR codes or change what document they open when scanned.
+            Click any QR code to view it in full, download it, or change the linked document.
           </p>
         </div>
 
@@ -208,7 +213,12 @@ export default function ManageListTab({ onGoToGenerate }) {
                   {/* Card Header */}
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-14 h-14 p-1 bg-white border border-slate-200 rounded-2xl shadow-sm flex items-center justify-center flex-shrink-0">
+                      {/* Clickable QR Thumbnail to open Full View */}
+                      <div 
+                        onClick={() => setPreviewQR(qr)}
+                        className="w-14 h-14 p-1 bg-white border border-slate-200 hover:border-emerald-500 rounded-2xl shadow-sm flex items-center justify-center flex-shrink-0 cursor-pointer active:scale-95 transition-all group"
+                        title="Click to view QR code in full"
+                      >
                         <div id={`qr-wrapper-mobile-${qr.codeId}`}>
                           <QRCodeCanvas
                             value={scanUrl}
@@ -221,7 +231,10 @@ export default function ManageListTab({ onGoToGenerate }) {
                         </div>
                       </div>
                       <div>
-                        <span className="font-mono font-extrabold text-xs text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-lg border border-emerald-200">
+                        <span 
+                          onClick={() => setPreviewQR(qr)}
+                          className="font-mono font-extrabold text-xs text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-lg border border-emerald-200 cursor-pointer hover:bg-emerald-200 transition-colors"
+                        >
                           {qr.codeId}
                         </span>
                         <p className="text-[10px] text-slate-400 mt-1 font-mono">
@@ -262,11 +275,11 @@ export default function ManageListTab({ onGoToGenerate }) {
                   {/* Touch Action Buttons */}
                   <div className="grid grid-cols-2 gap-2 pt-1">
                     <button
-                      onClick={() => handleDownloadQR(qr.codeId)}
+                      onClick={() => setPreviewQR(qr)}
                       className="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.97] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-sm"
                     >
-                      <Download className="w-3.5 h-3.5" />
-                      <span>Download QR</span>
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>View Full QR</span>
                     </button>
 
                     <button
@@ -314,9 +327,13 @@ export default function ManageListTab({ onGoToGenerate }) {
                     return (
                       <tr key={qr._id} className="hover:bg-slate-50/70 transition-colors">
                         
-                        {/* QR Thumbnail */}
+                        {/* QR Thumbnail — Click to view in full */}
                         <td className="py-4 px-6">
-                          <div className="w-14 h-14 p-1 bg-white border border-slate-200 rounded-xl shadow-sm flex items-center justify-center">
+                          <div 
+                            onClick={() => setPreviewQR(qr)}
+                            className="w-14 h-14 p-1 bg-white border border-slate-200 hover:border-emerald-500 rounded-xl shadow-sm flex items-center justify-center cursor-pointer hover:scale-105 transition-all"
+                            title="Click to view QR code in full"
+                          >
                             <div id={`qr-wrapper-${qr.codeId}`}>
                               <QRCodeCanvas
                                 value={scanUrl}
@@ -332,7 +349,10 @@ export default function ManageListTab({ onGoToGenerate }) {
 
                         {/* Code ID */}
                         <td className="py-4 px-6">
-                          <span className="font-mono font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+                          <span 
+                            onClick={() => setPreviewQR(qr)}
+                            className="font-mono font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 cursor-pointer hover:bg-emerald-200 transition-colors"
+                          >
                             {qr.codeId}
                           </span>
                           <p className="text-xs text-slate-400 mt-1">
@@ -368,14 +388,14 @@ export default function ManageListTab({ onGoToGenerate }) {
                         <td className="py-4 px-6 text-right">
                           <div className="flex items-center justify-end gap-2">
                             
-                            {/* Download QR button */}
+                            {/* View Full QR / Download button */}
                             <button
-                              onClick={() => handleDownloadQR(qr.codeId)}
+                              onClick={() => setPreviewQR(qr)}
                               className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold text-xs rounded-lg flex items-center gap-1.5 transition-colors"
-                              title="Download QR Code PNG"
+                              title="View QR Code in full"
                             >
-                              <Download className="w-3.5 h-3.5" />
-                              <span>Download</span>
+                              <Eye className="w-3.5 h-3.5" />
+                              <span>View Full</span>
                             </button>
 
                             {/* Change Document button */}
@@ -421,9 +441,54 @@ export default function ManageListTab({ onGoToGenerate }) {
         </>
       )}
 
+      {/* FULL SIZE QR CODE MODAL */}
+      {previewQR && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn"
+          onClick={() => setPreviewQR(null)}
+        >
+          <div 
+            className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl relative flex flex-col items-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setPreviewQR(null)}
+              className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-slate-700 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <span className="font-mono text-xs font-extrabold text-emerald-800 bg-emerald-100 px-3 py-1 rounded-lg border border-emerald-200 mb-4">
+              {previewQR.codeId}
+            </span>
+
+            <div className="p-4 bg-white border border-slate-200 rounded-2xl shadow-md flex items-center justify-center mb-6">
+              <div id={`qr-wrapper-modal-${previewQR.codeId}`}>
+                <QRCodeCanvas
+                  value={getScanUrl(previewQR.codeId)}
+                  size={240}
+                  fgColor="#000000"
+                  bgColor="#ffffff"
+                  level="H"
+                  includeMargin={false}
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={() => handleDownloadQR(previewQR.codeId)}
+              className="w-full py-3 px-6 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow flex items-center justify-center gap-2 transition-all"
+            >
+              <Download className="w-4 h-4 stroke-[2.5]" />
+              <span>Download QR Code (PNG)</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Change Document Modal */}
       {selectedQRForChange && (
-        <div className="fixed inset-0 z-50 flex items-center sm:items-center justify-center p-3 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
           <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative">
             
             <button
