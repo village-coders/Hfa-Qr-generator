@@ -1,0 +1,389 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { QRCodeCanvas } from 'qrcode.react';
+import { 
+  Download, UploadCloud, FileText, Trash2, ExternalLink, 
+  RefreshCw, Plus, CheckCircle2, AlertCircle, Eye, File,
+  Image as ImageIcon, FileSpreadsheet, X, Loader2
+} from 'lucide-react';
+import confetti from 'canvas-confetti';
+import { API_ENDPOINTS, getScanUrl } from '../config/api';
+
+export default function ManageListTab({ onGoToGenerate }) {
+  const [qrList, setQrList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [statusMsg, setStatusMsg] = useState({ type: '', text: '' });
+  
+  // Changing document modal state
+  const [selectedQRForChange, setSelectedQRForChange] = useState(null);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const fetchQRCodes = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(API_ENDPOINTS.QR_CODES);
+      const json = await res.json();
+      if (json.success) {
+        setQrList(json.data || []);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchQRCodes();
+  }, []);
+
+  // Download QR Code PNG (Trimmed exact black QR with no padding or text)
+  const handleDownloadQR = (codeId) => {
+    const wrapper = document.getElementById(`qr-wrapper-${codeId}`);
+    if (!wrapper) return;
+    const canvas = wrapper.querySelector('canvas');
+    if (!canvas) return;
+
+    const finalCanvas = document.createElement('canvas');
+    const size = 1024;
+    finalCanvas.width = size;
+    finalCanvas.height = size;
+
+    const ctx = finalCanvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, size, size);
+
+    // Draw QR image edge to edge
+    ctx.drawImage(canvas, 0, 0, size, size);
+
+    const link = document.createElement('a');
+    link.href = finalCanvas.toDataURL('image/png');
+    link.download = `${codeId}_QR_Code.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    setStatusMsg({ type: 'success', text: `Downloaded QR code ${codeId}!` });
+    setTimeout(() => setStatusMsg({ type: '', text: '' }), 3000);
+  };
+
+  // Change / Upload New Document to GridFS
+  const handleUploadNewDocument = async (file) => {
+    if (!file || !selectedQRForChange) return;
+
+    setUploadingDoc(true);
+    setStatusMsg({ type: 'info', text: 'Updating document in MongoDB GridFS...' });
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch(API_ENDPOINTS.QR_CODE_ATTACHMENTS(selectedQRForChange.codeId), {
+        method: 'POST',
+        body: formData,
+      });
+
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.message || 'Failed to update document.');
+      }
+
+      setStatusMsg({
+        type: 'success',
+        text: `Document for ${selectedQRForChange.codeId} changed to "${file.name}"!`,
+      });
+      setSelectedQRForChange(null);
+      fetchQRCodes();
+      confetti({ particleCount: 40, spread: 60, origin: { y: 0.7 } });
+      setTimeout(() => setStatusMsg({ type: '', text: '' }), 4000);
+    } catch (err) {
+      setStatusMsg({ type: 'error', text: err.message });
+    } finally {
+      setUploadingDoc(false);
+    }
+  };
+
+  // Delete QR Code
+  const handleDeleteQR = async (codeId) => {
+    if (!window.confirm(`Are you sure you want to delete QR Code ${codeId}?`)) return;
+
+    try {
+      const res = await fetch(API_ENDPOINTS.QR_CODE_BY_ID(codeId), {
+        method: 'DELETE',
+      });
+      const json = await res.json();
+      if (json.success) {
+        setStatusMsg({ type: 'success', text: `QR Code ${codeId} deleted.` });
+        fetchQRCodes();
+        setTimeout(() => setStatusMsg({ type: '', text: '' }), 3000);
+      }
+    } catch (err) {
+      setStatusMsg({ type: 'error', text: 'Failed to delete.' });
+    }
+  };
+
+  const getFileIcon = (fileName) => {
+    if (fileName?.match(/\.(jpg|jpeg|png|webp|gif)$/i)) {
+      return <ImageIcon className="w-5 h-5 text-purple-600" />;
+    }
+    if (fileName?.endsWith('.pdf')) {
+      return <FileText className="w-5 h-5 text-rose-600" />;
+    }
+    if (fileName?.match(/\.(xlsx|xls|csv)$/i)) {
+      return <FileSpreadsheet className="w-5 h-5 text-emerald-600" />;
+    }
+    return <File className="w-5 h-5 text-blue-600" />;
+  };
+
+  return (
+    <div className="max-w-6xl mx-auto py-8 sm:py-12 px-4">
+      
+      {/* Header Bar */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Manage QR List</h1>
+          <p className="text-sm text-slate-500 mt-0.5">
+            Download your QR codes or change what document they open when scanned.
+          </p>
+        </div>
+
+        <button
+          onClick={onGoToGenerate}
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-sm rounded-xl shadow transition-all"
+        >
+          <Plus className="w-4 h-4 stroke-[2.5]" />
+          <span>Generate New QR Code</span>
+        </button>
+      </div>
+
+      {/* Alert */}
+      {statusMsg.text && (
+        <div
+          className={`mb-6 p-4 rounded-2xl text-sm flex items-center gap-3 border ${
+            statusMsg.type === 'error'
+              ? 'bg-rose-50 border-rose-200 text-rose-700'
+              : 'bg-emerald-50 border-emerald-200 text-emerald-800'
+          }`}
+        >
+          {statusMsg.type === 'error' ? (
+            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          ) : (
+            <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-emerald-600" />
+          )}
+          <span>{statusMsg.text}</span>
+        </div>
+      )}
+
+      {/* Table / List Container */}
+      <div className="bg-white border border-slate-200 rounded-3xl shadow-lg overflow-hidden">
+        {loading ? (
+          <div className="py-16 flex flex-col items-center justify-center text-slate-400">
+            <RefreshCw className="w-8 h-8 animate-spin text-emerald-600 mb-3" />
+            <p className="text-sm">Loading QR list...</p>
+          </div>
+        ) : qrList.length === 0 ? (
+          <div className="py-16 text-center px-4">
+            <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+            <h3 className="text-lg font-bold text-slate-800">No QR codes generated yet</h3>
+            <p className="text-xs sm:text-sm text-slate-500 max-w-sm mx-auto mt-1 mb-6">
+              Generate your first QR code and link a document to it.
+            </p>
+            <button
+              onClick={onGoToGenerate}
+              className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow"
+            >
+              Generate QR Code
+            </button>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <th className="py-4 px-6">QR Code</th>
+                  <th className="py-4 px-6">Code ID</th>
+                  <th className="py-4 px-6">Linked Document</th>
+                  <th className="py-4 px-6 text-center">Scans</th>
+                  <th className="py-4 px-6 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-sm">
+                {qrList.map((qr) => {
+                  const doc = qr.attachments?.[0];
+                  const scanUrl = getScanUrl(qr.codeId);
+
+                  return (
+                    <tr key={qr._id} className="hover:bg-slate-50/70 transition-colors">
+                      
+                      {/* QR Thumbnail */}
+                      <td className="py-4 px-6">
+                        <div className="w-14 h-14 p-1 bg-white border border-slate-200 rounded-xl shadow-sm flex items-center justify-center">
+                          <div id={`qr-wrapper-${qr.codeId}`}>
+                            <QRCodeCanvas
+                              value={scanUrl}
+                              size={48}
+                              fgColor="#000000"
+                              bgColor="#ffffff"
+                              level="H"
+                              includeMargin={false}
+                            />
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Code ID */}
+                      <td className="py-4 px-6">
+                        <span className="font-mono font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+                          {qr.codeId}
+                        </span>
+                        <p className="text-xs text-slate-400 mt-1">
+                          Created {new Date(qr.createdAt).toLocaleDateString()}
+                        </p>
+                      </td>
+
+                      {/* Linked Document */}
+                      <td className="py-4 px-6">
+                        {doc ? (
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+                              {getFileIcon(doc.fileName)}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-semibold text-slate-800 truncate max-w-[200px]">{doc.fileName}</p>
+                              <p className="text-xs text-slate-400">{doc.fileSize || 'Doc'}</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-slate-400 italic">No document uploaded yet</span>
+                        )}
+                      </td>
+
+                      {/* Scans Count */}
+                      <td className="py-4 px-6 text-center">
+                        <span className="font-bold text-slate-700 font-mono bg-slate-100 px-2.5 py-1 rounded-full text-xs">
+                          {qr.scanCount || 0}
+                        </span>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="py-4 px-6 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          
+                          {/* Download QR button */}
+                          <button
+                            onClick={() => handleDownloadQR(qr.codeId)}
+                            className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold text-xs rounded-lg flex items-center gap-1.5 transition-colors"
+                            title="Download QR Code PNG"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                            <span>Download</span>
+                          </button>
+
+                          {/* Change Document button */}
+                          <button
+                            onClick={() => setSelectedQRForChange(qr)}
+                            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-lg flex items-center gap-1.5 transition-colors"
+                            title="Upload or replace document"
+                          >
+                            <UploadCloud className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>{doc ? 'Change Document' : 'Upload Document'}</span>
+                          </button>
+
+                          {/* Test Public Scan */}
+                          <a
+                            href={scanUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition-colors"
+                            title="Open scanned link in new tab"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+
+                          {/* Delete */}
+                          <button
+                            onClick={() => handleDeleteQR(qr.codeId)}
+                            className="p-2 bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg transition-colors"
+                            title="Delete QR"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+
+                        </div>
+                      </td>
+
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Change Document Modal */}
+      {selectedQRForChange && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative">
+            
+            <button
+              onClick={() => setSelectedQRForChange(null)}
+              className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-700"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <UploadCloud className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Change Document</h3>
+                <p className="text-xs text-slate-500 font-mono">For QR Code: {selectedQRForChange.codeId}</p>
+              </div>
+            </div>
+
+            {selectedQRForChange.attachments?.[0] && (
+              <div className="mb-4 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                <p className="text-slate-500">Current file:</p>
+                <p className="font-semibold text-slate-800 truncate">{selectedQRForChange.attachments[0].fileName}</p>
+              </div>
+            )}
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  handleUploadNewDocument(e.target.files[0]);
+                }
+              }}
+            />
+
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingDoc}
+              className="w-full py-8 border-2 border-dashed border-emerald-300 hover:border-emerald-500 bg-emerald-50/40 rounded-2xl flex flex-col items-center justify-center text-center transition-all cursor-pointer"
+            >
+              {uploadingDoc ? (
+                <>
+                  <Loader2 className="w-8 h-8 animate-spin text-emerald-600 mb-2" />
+                  <span className="text-xs font-bold text-emerald-800">Updating MongoDB GridFS...</span>
+                </>
+              ) : (
+                <>
+                  <UploadCloud className="w-8 h-8 text-emerald-600 mb-2" />
+                  <span className="text-sm font-bold text-slate-800">Click to Select New Document</span>
+                  <span className="text-xs text-slate-400 mt-0.5">PDF, Word, Excel, Image (Replaces previous file)</span>
+                </>
+              )}
+            </button>
+
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}
