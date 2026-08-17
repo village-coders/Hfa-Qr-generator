@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Users, UserPlus, Trash2, Shield, User, Mail, 
-  CheckCircle2, AlertCircle, RefreshCw, X, Loader2, KeyRound, Building, LogIn
+  Users, UserPlus, Trash2, Pencil, User, Mail, 
+  CheckCircle2, AlertCircle, RefreshCw, X, Loader2, KeyRound, Building, LogIn,
+  ShieldCheck, ShieldOff
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { API_ENDPOINTS } from '../config/api';
@@ -24,6 +25,32 @@ export default function UserManagementTab() {
     role: 'user',
     department: '',
   });
+
+  // Edit user modal state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: 'user',
+    department: '',
+    active: true,
+  });
+
+  const openEditModal = (u) => {
+    setEditingUser(u);
+    setEditForm({
+      name: u.name || '',
+      email: u.email || '',
+      password: '',
+      role: u.role || 'user',
+      department: u.department || '',
+      active: u.active !== false,
+    });
+    setShowEditModal(true);
+  };
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -140,6 +167,48 @@ export default function UserManagementTab() {
     }
   };
 
+  const handleEditUser = async (e) => {
+    e.preventDefault();
+    if (!editForm.name.trim() || !editForm.email.trim()) {
+      setStatusMsg({ type: 'error', text: 'Name and email are required.' });
+      return;
+    }
+    setEditSaving(true);
+    setStatusMsg({ type: '', text: '' });
+    try {
+      const payload = {
+        name: editForm.name.trim(),
+        email: editForm.email.trim(),
+        role: editForm.role,
+        department: editForm.department.trim(),
+        active: editForm.active,
+      };
+      if (editForm.password.trim()) {
+        payload.password = editForm.password.trim();
+      }
+      const res = await fetch(API_ENDPOINTS.QR_USER_BY_ID(editingUser._id), {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.message || 'Failed to update user.');
+      setStatusMsg({ type: 'success', text: `User "${editForm.name}" updated successfully.` });
+      setShowEditModal(false);
+      setEditingUser(null);
+      fetchUsers();
+      setTimeout(() => setStatusMsg({ type: '', text: '' }), 3000);
+    } catch (err) {
+      setStatusMsg({ type: 'error', text: err.message });
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
   if (!isAdmin) {
     return (
       <div className="max-w-2xl mx-auto py-16 px-4 text-center">
@@ -165,7 +234,7 @@ export default function UserManagementTab() {
             </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Create and manage users who can generate and maintain HFA QR codes (separate from Staff Portal).
+            Create and manage users who can generate and maintain HFA QR codes.
           </p>
         </div>
 
@@ -253,15 +322,24 @@ export default function UserManagementTab() {
                       </div>
                     </div>
 
-                    {!isSelf && (
+                    <div className="flex items-center gap-1.5">
                       <button
-                        onClick={() => handleDeleteUser(u)}
-                        className="p-2 bg-rose-50 text-rose-600 rounded-xl hover:bg-rose-100 transition-colors"
-                        title="Delete User"
+                        onClick={() => openEditModal(u)}
+                        className="p-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors"
+                        title="Edit User"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Pencil className="w-4 h-4" />
                       </button>
-                    )}
+                      {!isSelf && (
+                        <button
+                          onClick={() => handleDeleteUser(u)}
+                          className="p-2 bg-rose-50 text-rose-600 rounded-xl hover:bg-rose-100 transition-colors"
+                          title="Delete User"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-1 text-xs">
@@ -348,15 +426,24 @@ export default function UserManagementTab() {
                         </td>
 
                         <td className="py-4 px-6 text-right">
-                          {!isSelf && (
+                          <div className="flex items-center justify-end gap-2">
                             <button
-                              onClick={() => handleDeleteUser(u)}
-                              className="p-2 bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg transition-colors"
-                              title="Delete QR User"
+                              onClick={() => openEditModal(u)}
+                              className="p-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors"
+                              title="Edit QR User"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Pencil className="w-4 h-4" />
                             </button>
-                          )}
+                            {!isSelf && (
+                              <button
+                                onClick={() => handleDeleteUser(u)}
+                                className="p-2 bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg transition-colors"
+                                title="Delete QR User"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );
@@ -501,6 +588,159 @@ export default function UserManagementTab() {
                   <span>Create QR User</span>
                 )}
               </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit User Modal */}
+      {showEditModal && editingUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => {
+                setShowEditModal(false);
+                setEditingUser(null);
+              }}
+              className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-slate-700 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100">
+                <Pencil className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Edit QR User</h3>
+                <p className="text-xs text-slate-500 font-mono">@{editingUser.username}</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleEditUser} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Full Name *
+                </label>
+                <div className="relative">
+                  <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    required
+                    value={editForm.name}
+                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                    placeholder="e.g. John Doe"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:border-blue-500 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Email Address *
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="email"
+                    required
+                    value={editForm.email}
+                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                    placeholder="john@example.com"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:border-blue-500 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Role
+                  </label>
+                  <select
+                    value={editForm.role}
+                    onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:border-blue-500 transition-all"
+                  >
+                    <option value="user">User (Standard)</option>
+                    <option value="admin">Admin (Full Access)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Account Status
+                  </label>
+                  <select
+                    value={editForm.active ? 'active' : 'inactive'}
+                    onChange={(e) => setEditForm({ ...editForm, active: e.target.value === 'active' })}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:border-blue-500 transition-all"
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Change Password
+                </label>
+                <div className="relative">
+                  <KeyRound className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="password"
+                    value={editForm.password}
+                    onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
+                    placeholder="Leave blank to keep unchanged"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:border-blue-500 transition-all"
+                  />
+                </div>
+                <p className="text-[11px] text-slate-400 mt-1">Leave blank if you don't want to change the password.</p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Department (Optional)
+                </label>
+                <div className="relative">
+                  <Building className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={editForm.department}
+                    onChange={(e) => setEditForm({ ...editForm, department: e.target.value })}
+                    placeholder="e.g. Halal Compliance"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:border-blue-500 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingUser(null);
+                  }}
+                  className="w-1/3 py-2.5 px-4 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-sm transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={editSaving}
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {editSaving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Saving Changes...</span>
+                    </>
+                  ) : (
+                    <span>Save Changes</span>
+                  )}
+                </button>
+              </div>
             </form>
           </div>
         </div>
