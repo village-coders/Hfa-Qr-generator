@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
-import API_BASE_URL from '../config/api';
+import { API_ENDPOINTS } from '../config/api';
 
 const AuthContext = createContext(null);
 
@@ -14,7 +14,7 @@ export const AuthProvider = ({ children }) => {
   });
 
   const login = async (username, password) => {
-    const res = await fetch(`${API_BASE_URL}/auth/login`, {
+    const res = await fetch(API_ENDPOINTS.QR_AUTH_LOGIN, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),

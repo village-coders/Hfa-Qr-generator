@@ -28,7 +28,7 @@ export default function UserManagementTab() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_ENDPOINTS.USERS}?limit=100`, {
+      const res = await fetch(API_ENDPOINTS.QR_USERS, {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -45,7 +45,7 @@ export default function UserManagementTab() {
       } else if (json.success) {
         setUsersList(json.data || []);
       } else {
-        setStatusMsg({ type: 'error', text: json.message || 'Failed to load users.' });
+        setStatusMsg({ type: 'error', text: json.message || 'Failed to load QR users.' });
       }
     } catch (err) {
       console.error(err);
@@ -69,10 +69,10 @@ export default function UserManagementTab() {
     }
 
     setCreating(true);
-    setStatusMsg({ type: 'info', text: 'Creating new user...' });
+    setStatusMsg({ type: 'info', text: 'Creating new QR user...' });
 
     try {
-      const res = await fetch(API_ENDPOINTS.USERS, {
+      const res = await fetch(API_ENDPOINTS.QR_USERS, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -84,10 +84,10 @@ export default function UserManagementTab() {
 
       const json = await res.json();
       if (!res.ok || !json.success) {
-        throw new Error(json.message || 'Failed to create user.');
+        throw new Error(json.message || 'Failed to create QR user.');
       }
 
-      setStatusMsg({ type: 'success', text: `User "${formData.name}" created successfully!` });
+      setStatusMsg({ type: 'success', text: `QR User "${formData.name}" created successfully!` });
       setShowCreateModal(false);
       setFormData({
         name: '',
@@ -109,16 +109,16 @@ export default function UserManagementTab() {
 
   const handleDeleteUser = async (userToDelete) => {
     if (userToDelete._id === currentUser?._id || userToDelete.username === currentUser?.username) {
-      alert('You cannot delete your own admin account.');
+      alert('You cannot delete your own QR admin account.');
       return;
     }
 
-    if (!window.confirm(`Are you sure you want to delete user "${userToDelete.name}" (@${userToDelete.username})?`)) {
+    if (!window.confirm(`Are you sure you want to delete QR user "${userToDelete.name}" (@${userToDelete.username})?`)) {
       return;
     }
 
     try {
-      const res = await fetch(API_ENDPOINTS.USER_BY_ID(userToDelete._id), {
+      const res = await fetch(API_ENDPOINTS.QR_USER_BY_ID(userToDelete._id), {
         method: 'DELETE',
         credentials: 'include',
         headers: {
@@ -129,14 +129,14 @@ export default function UserManagementTab() {
 
       const json = await res.json();
       if (json.success) {
-        setStatusMsg({ type: 'success', text: `User "${userToDelete.name}" deleted.` });
+        setStatusMsg({ type: 'success', text: `QR User "${userToDelete.name}" deleted.` });
         fetchUsers();
         setTimeout(() => setStatusMsg({ type: '', text: '' }), 3000);
       } else {
-        setStatusMsg({ type: 'error', text: json.message || 'Failed to delete user.' });
+        setStatusMsg({ type: 'error', text: json.message || 'Failed to delete QR user.' });
       }
     } catch (err) {
-      setStatusMsg({ type: 'error', text: 'Error deleting user.' });
+      setStatusMsg({ type: 'error', text: 'Error deleting QR user.' });
     }
   };
 
@@ -147,7 +147,7 @@ export default function UserManagementTab() {
           <AlertCircle className="w-8 h-8" />
         </div>
         <h2 className="text-xl font-bold text-slate-800 mb-1">Access Restricted</h2>
-        <p className="text-sm text-slate-500">Only authorized administrators can access User Management.</p>
+        <p className="text-sm text-slate-500">Only authorized administrators can access QR User Management.</p>
       </div>
     );
   }
@@ -159,13 +159,13 @@ export default function UserManagementTab() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6 sm:mb-8">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900">User Management</h1>
+            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900">QR User Management</h1>
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">
               Admin Only
             </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Create and manage users who can generate and maintain HFA QR codes.
+            Create and manage users who can generate and maintain HFA QR codes (separate from Staff Portal).
           </p>
         </div>
 
@@ -174,7 +174,7 @@ export default function UserManagementTab() {
           className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs sm:text-sm rounded-2xl shadow transition-all"
         >
           <UserPlus className="w-4 h-4 stroke-[2.5]" />
-          <span>Create New User</span>
+          <span>Create New QR User</span>
         </button>
       </div>
 
@@ -195,7 +195,7 @@ export default function UserManagementTab() {
             )}
             <span>{statusMsg.text}</span>
           </div>
-          {!token && (
+          {statusMsg.type === 'error' && (
             <button
               onClick={logout}
               className="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow self-start sm:self-auto flex items-center gap-1.5"
@@ -211,20 +211,20 @@ export default function UserManagementTab() {
       {loading ? (
         <div className="py-16 flex flex-col items-center justify-center text-slate-400 bg-white rounded-3xl border border-slate-200 shadow-sm">
           <RefreshCw className="w-8 h-8 animate-spin text-emerald-600 mb-3" />
-          <p className="text-xs sm:text-sm font-semibold">Loading users list...</p>
+          <p className="text-xs sm:text-sm font-semibold">Loading QR users...</p>
         </div>
       ) : usersList.length === 0 ? (
         <div className="py-16 text-center px-4 bg-white rounded-3xl border border-slate-200 shadow-sm">
           <Users className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <h3 className="text-lg font-bold text-slate-800">No users found</h3>
+          <h3 className="text-lg font-bold text-slate-800">No QR users found</h3>
           <p className="text-xs sm:text-sm text-slate-500 max-w-sm mx-auto mt-1 mb-6">
-            Create your first staff user to grant access.
+            Create your first QR user to grant access to the portal.
           </p>
           <button
             onClick={() => setShowCreateModal(true)}
             className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow"
           >
-            Create User
+            Create QR User
           </button>
         </div>
       ) : (
@@ -295,7 +295,7 @@ export default function UserManagementTab() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    <th className="py-4 px-6">User</th>
+                    <th className="py-4 px-6">QR User</th>
                     <th className="py-4 px-6">Email</th>
                     <th className="py-4 px-6">Role</th>
                     <th className="py-4 px-6">Department</th>
@@ -352,7 +352,7 @@ export default function UserManagementTab() {
                             <button
                               onClick={() => handleDeleteUser(u)}
                               className="p-2 bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg transition-colors"
-                              title="Delete User"
+                              title="Delete QR User"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -384,8 +384,8 @@ export default function UserManagementTab() {
                 <UserPlus className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-900">Create New User</h3>
-                <p className="text-xs text-slate-500">Provide user credentials and role access.</p>
+                <h3 className="text-lg font-bold text-slate-900">Create New QR User</h3>
+                <p className="text-xs text-slate-500">Add a dedicated user for HFA QR Portal.</p>
               </div>
             </div>
 
@@ -433,8 +433,6 @@ export default function UserManagementTab() {
                   >
                     <option value="user">User (Standard)</option>
                     <option value="admin">Admin (Full Access)</option>
-                    <option value="accountant">Accountant</option>
-                    <option value="financial_officer">Financial Officer</option>
                   </select>
                 </div>
               </div>
@@ -483,7 +481,7 @@ export default function UserManagementTab() {
                     type="text"
                     value={formData.department}
                     onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                    placeholder="e.g. Halal Audit / Operations"
+                    placeholder="e.g. Halal Compliance"
                     className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:border-emerald-500 transition-all"
                   />
                 </div>
@@ -497,10 +495,10 @@ export default function UserManagementTab() {
                 {creating ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Creating User...</span>
+                    <span>Creating QR User...</span>
                   </>
                 ) : (
-                  <span>Create User</span>
+                  <span>Create QR User</span>
                 )}
               </button>
             </form>
