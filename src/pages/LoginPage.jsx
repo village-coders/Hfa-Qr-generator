@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { QrCode, Lock, User, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
+import { Lock, User, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function LoginPage() {
@@ -37,11 +37,13 @@ export default function LoginPage() {
 
         {/* Logo / Brand */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 mx-auto mb-4 shadow-sm">
-            <QrCode className="w-8 h-8 stroke-[2.2]" />
-          </div>
-          <h1 className="text-2xl font-bold text-slate-900">QR Portal</h1>
-          <p className="text-sm text-slate-500 mt-1">Sign in to manage and generate dynamic QR codes</p>
+          <img
+            src="/logo.jpg"
+            alt="HFA Approved Logo"
+            className="w-20 h-20 object-contain mx-auto mb-3 bg-white p-1 rounded-2xl border border-slate-200 shadow-sm"
+          />
+          <h1 className="text-2xl font-extrabold text-slate-900">HFA QR Portal</h1>
+          <p className="text-sm text-slate-500 mt-1">Sign in to manage and generate HFA QR codes</p>
         </div>
 
         {/* Error Message */}

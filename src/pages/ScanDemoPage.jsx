@@ -25,10 +25,10 @@ export default function ScanDemoPage() {
           <span>Interactive Code Scanner</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-white">
-          Scan & Test Dynamic QR Codes
+          Scan & Test HFA QR Codes
         </h1>
         <p className="text-sm sm:text-base text-slate-400 mt-2 max-w-xl mx-auto">
-          Test any dynamic QR code with your webcam, smartphone camera, image upload, or direct code ID lookup.
+          Test any HFA QR code with your webcam, smartphone camera, image upload, or direct code ID lookup.
         </p>
       </div>
 
@@ -63,7 +63,7 @@ export default function ScanDemoPage() {
             </div>
             <h2 className="text-xl font-bold text-white mb-2">Lookup by Code ID</h2>
             <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-              Enter any dynamic QR short code or serial number to inspect its live GridFS documents and specifications.
+              Enter any HFA QR short code or serial number to inspect its live GridFS documents and specifications.
             </p>
           </div>
 

@@ -224,7 +224,7 @@ export default function ContentUploader({ qrData, onUpdateSuccess, onLivePreview
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-slate-800">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-white">Dynamic Content & Uploads</h2>
+            <h2 className="text-xl font-bold text-white">HFA Content & Uploads</h2>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               Live Linked
             </span>

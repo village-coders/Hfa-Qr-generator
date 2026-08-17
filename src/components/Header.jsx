@@ -17,18 +17,18 @@ export default function Header({ onOpenScanner }) {
         
         {/* Brand Logo */}
         <Link to="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 via-teal-500 to-cyan-400 p-[1.5px] shadow-glow transition-transform group-hover:scale-105">
-            <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-              <QrCode className="w-5 h-5 text-emerald-400 group-hover:rotate-6 transition-transform" />
-            </div>
-          </div>
+          <img
+            src="/logo.jpg"
+            alt="HFA Logo"
+            className="w-10 h-10 object-contain bg-white rounded-xl border border-emerald-500/30 p-0.5 shadow-glow transition-transform group-hover:scale-105"
+          />
           <div>
             <div className="flex items-center gap-2">
               <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
-                Dynamic QR Hub
+                HFA QR Hub
               </span>
               <span className="px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full">
-                GridFS
+                HFA
               </span>
             </div>
             <p className="text-[11px] text-slate-400 hidden sm:block">Generate • Download • Link Uploads</p>

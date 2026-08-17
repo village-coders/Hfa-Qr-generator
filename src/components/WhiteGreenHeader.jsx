@@ -1,5 +1,5 @@
 import React from 'react';
-import { QrCode, PlusCircle, ListFilter, LogOut, User } from 'lucide-react';
+import { PlusCircle, ListFilter, LogOut, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function WhiteGreenHeader({ activeTab, setActiveTab }) {
@@ -14,13 +14,15 @@ export default function WhiteGreenHeader({ activeTab, setActiveTab }) {
           
           {/* Brand Logo */}
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-sm flex-shrink-0">
-              <QrCode className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.2]" />
-            </div>
+            <img 
+              src="/logo.jpg" 
+              alt="HFA Logo" 
+              className="w-10 h-10 object-contain bg-white rounded-xl border border-emerald-200 shadow-sm p-0.5 flex-shrink-0" 
+            />
             <div>
-              <span className="font-extrabold text-base sm:text-lg text-slate-900 tracking-tight">QR Portal</span>
+              <span className="font-extrabold text-base sm:text-lg text-slate-900 tracking-tight">HFA QR Portal</span>
               <span className="ml-1.5 text-[9px] sm:text-[10px] uppercase tracking-wider font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
-                HFA
+                APPROVED
               </span>
             </div>
           </div>

@@ -99,7 +99,7 @@ export default function ManageQRCodesPage() {
             </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Manage your dynamic codes, update uploaded GridFS documents anytime, and track scan analytics.
+            Manage your HFA codes, update uploaded GridFS documents anytime, and track scan analytics.
           </p>
         </div>
 
@@ -205,7 +205,7 @@ export default function ManageQRCodesPage() {
       {loading ? (
         <div className="py-20 flex flex-col items-center justify-center text-slate-400">
           <RefreshCw className="w-8 h-8 animate-spin text-emerald-400 mb-3" />
-          <p className="text-sm">Loading dynamic QR codes...</p>
+          <p className="text-sm">Loading HFA QR codes...</p>
         </div>
       ) : qrList.length === 0 ? (
         <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-12 text-center">
@@ -214,14 +214,14 @@ export default function ManageQRCodesPage() {
           </div>
           <h3 className="text-lg font-bold text-white mb-1">No QR Codes Found</h3>
           <p className="text-xs sm:text-sm text-slate-400 max-w-md mx-auto mb-6">
-            You haven't generated any dynamic QR codes matching this filter yet. Create your first one now!
+            You haven't generated any HFA QR codes matching this filter yet. Create your first one now!
           </p>
           <Link
             to="/"
             className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm transition-all"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>Generate Dynamic QR</span>
+            <span>Generate HFA QR</span>
           </Link>
         </div>
       ) : (
@@ -256,7 +256,7 @@ export default function ManageQRCodesPage() {
                     {qr.title}
                   </h3>
                   <p className="text-xs text-slate-400 mt-1 line-clamp-2 min-h-[32px]">
-                    {qr.description || (qr.itemDetails?.model ? `Model: ${qr.itemDetails.model}` : 'Dynamic asset landing page')}
+                    {qr.description || (qr.itemDetails?.model ? `Model: ${qr.itemDetails.model}` : 'HFA asset landing page')}
                   </p>
 
                   {/* Metadata Chips */}

@@ -147,13 +147,13 @@ export default function GeneratorPage() {
       <div className="mb-10 text-center max-w-3xl mx-auto">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-3">
           <Sparkles className="w-3.5 h-3.5" />
-          <span>Dynamic QR Code & GridFS Storage</span>
+          <span>HFA QR Code Generator</span>
         </div>
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight">
           Generate, Download & Link Uploads
         </h1>
         <p className="text-sm sm:text-base text-slate-400 mt-3 max-w-2xl mx-auto leading-relaxed">
-          Create dynamic QR codes, download them in high-resolution, and upload documents or specifications that appear instantly when scanned.
+          Create HFA QR codes, download them in high-resolution, and upload documents or specifications that appear instantly when scanned.
         </p>
 
         {/* 3-Step Interactive Breadcrumb Bar */}
@@ -236,7 +236,7 @@ export default function GeneratorPage() {
                   <QrCode className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-white">1. Configure Dynamic QR Code</h2>
+                  <h2 className="text-lg font-bold text-white">1. Configure HFA QR Code</h2>
                   <p className="text-xs text-slate-400">Set identity, classification & visual styling</p>
                 </div>
               </div>
@@ -398,12 +398,12 @@ export default function GeneratorPage() {
                 {isGenerating ? (
                   <>
                     <RefreshCw className="w-5 h-5 animate-spin" />
-                    <span>Creating Dynamic QR Code...</span>
+                    <span>Creating HFA QR Code...</span>
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-5 h-5" />
-                    <span>Generate Dynamic QR Code & Open Download Station</span>
+                    <span>Generate HFA QR Code & Open Download Station</span>
                   </>
                 )}
               </button>

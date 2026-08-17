@@ -166,13 +166,15 @@ export default function SimpleGeneratorTab({ onGoToManage }) {
       {/* BEFORE GENERATION: Clean Single Button Prompt */}
       {!generatedQR ? (
         <div className="bg-white border border-slate-200 rounded-3xl p-8 sm:p-12 text-center shadow-lg">
-          <div className="w-20 h-20 rounded-3xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 mx-auto mb-6 shadow-sm">
-            <Sparkles className="w-10 h-10" />
-          </div>
+          <img 
+            src="/logo.jpg" 
+            alt="HFA Approved Logo" 
+            className="w-20 h-20 object-contain mx-auto mb-6 bg-white p-1 rounded-3xl border border-slate-200 shadow-sm"
+          />
 
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">Generate Dynamic QR Code</h2>
+          <h2 className="text-2xl font-extrabold text-slate-900 mb-2">Generate HFA QR Code</h2>
           <p className="text-sm text-slate-500 max-w-md mx-auto mb-8">
-            Click the button below to generate a new QR code instantly. No form details required! You can download the QR code and upload the document right after.
+            Click the button below to generate a new HFA QR code instantly. No form details required! You can download the QR code and upload the document right after.
           </p>
 
           <button
@@ -183,12 +185,12 @@ export default function SimpleGeneratorTab({ onGoToManage }) {
             {isGenerating ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Generating Code...</span>
+                <span>Generating HFA Code...</span>
               </>
             ) : (
               <>
                 <Sparkles className="w-5 h-5" />
-                <span>Generate QR Code</span>
+                <span>Generate HFA QR Code</span>
               </>
             )}
           </button>

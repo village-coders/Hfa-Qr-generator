@@ -169,7 +169,7 @@ export default function DownloadModal({ qrData, onClose, onProceedToUpload }) {
       doc.setTextColor(15, 23, 42);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(14);
-      doc.text(qrData.title || 'Dynamic Asset', 50, 32, { align: 'center' });
+      doc.text(qrData.title || 'HFA Asset', 50, 32, { align: 'center' });
 
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(9);
@@ -209,7 +209,7 @@ export default function DownloadModal({ qrData, onClose, onProceedToUpload }) {
       // Footer
       doc.setFontSize(7);
       doc.setTextColor(148, 163, 184);
-      doc.text('Powered by Dynamic QR Hub • GridFS Storage System', 50, 146, { align: 'center' });
+      doc.text('Powered by HFA QR Portal • GridFS Storage System', 50, 146, { align: 'center' });
 
       doc.save(`${qrData.codeId}_Printable_Asset_Badge.pdf`);
 

@@ -141,7 +141,7 @@ export default function CameraScannerModal({ isOpen, onClose }) {
           </div>
           <div>
             <h3 className="text-lg font-bold text-white">Live Camera QR Scanner</h3>
-            <p className="text-xs text-slate-400">Point your camera at any dynamic QR code to test</p>
+            <p className="text-xs text-slate-400">Point your camera at any HFA QR code to test</p>
           </div>
         </div>
 
