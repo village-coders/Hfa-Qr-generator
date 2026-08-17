@@ -237,7 +237,11 @@ export default function ManageListTab({ onGoToGenerate }) {
                         >
                           {qr.codeId}
                         </span>
-                        <p className="text-[10px] text-slate-400 mt-1 font-mono">
+                        <div className="flex items-center gap-1 text-[11px] text-slate-500 mt-1">
+                          <User className="w-3 h-3 text-emerald-600" />
+                          <span>By: <strong className="text-slate-800">{qr.createdByName || 'Admin'}</strong></span>
+                        </div>
+                        <p className="text-[10px] text-slate-400 font-mono">
                           {qr.scanCount || 0} scan{qr.scanCount === 1 ? '' : 's'} • {new Date(qr.createdAt).toLocaleDateString()}
                         </p>
                       </div>
@@ -314,6 +318,7 @@ export default function ManageListTab({ onGoToGenerate }) {
                   <tr className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
                     <th className="py-4 px-6">QR Code</th>
                     <th className="py-4 px-6">Code ID</th>
+                    <th className="py-4 px-6">Created By</th>
                     <th className="py-4 px-6">Linked Document</th>
                     <th className="py-4 px-6 text-center">Scans</th>
                     <th className="py-4 px-6 text-right">Actions</th>
@@ -358,6 +363,18 @@ export default function ManageListTab({ onGoToGenerate }) {
                           <p className="text-xs text-slate-400 mt-1">
                             Created {new Date(qr.createdAt).toLocaleDateString()}
                           </p>
+                        </td>
+
+                        {/* Created By */}
+                        <td className="py-4 px-6">
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold text-xs border border-emerald-100 flex-shrink-0">
+                              {(qr.createdByName || 'Admin').charAt(0).toUpperCase()}
+                            </div>
+                            <span className="font-semibold text-xs text-slate-800">
+                              {qr.createdByName || 'Admin'}
+                            </span>
+                          </div>
                         </td>
 
                         {/* Linked Document */}

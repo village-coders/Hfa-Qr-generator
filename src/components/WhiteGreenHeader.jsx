@@ -1,9 +1,9 @@
 import React from 'react';
-import { PlusCircle, ListFilter, LogOut, User } from 'lucide-react';
+import { PlusCircle, ListFilter, Users, LogOut, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function WhiteGreenHeader({ activeTab, setActiveTab }) {
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
 
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
@@ -52,6 +52,20 @@ export default function WhiteGreenHeader({ activeTab, setActiveTab }) {
               <ListFilter className="w-4 h-4 text-emerald-600" />
               <span>Manage QR List</span>
             </button>
+
+            {isAdmin && (
+              <button
+                onClick={() => setActiveTab('users')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all active:scale-[0.98] ${
+                  activeTab === 'users'
+                    ? 'bg-white text-emerald-800 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Users className="w-4 h-4 text-emerald-600" />
+                <span>Users</span>
+              </button>
+            )}
           </nav>
 
           {/* User Info & Logout */}
@@ -59,6 +73,11 @@ export default function WhiteGreenHeader({ activeTab, setActiveTab }) {
             <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-600 font-semibold bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl">
               <User className="w-3.5 h-3.5 text-emerald-600" />
               <span>{user?.name || user?.username || 'User'}</span>
+              {isAdmin && (
+                <span className="text-[10px] font-extrabold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">
+                  Admin
+                </span>
+              )}
             </div>
 
             <button
@@ -75,30 +94,44 @@ export default function WhiteGreenHeader({ activeTab, setActiveTab }) {
 
         {/* Mobile Navigation Tab Strip */}
         <div className="md:hidden pb-3">
-          <nav className="grid grid-cols-2 gap-1.5 bg-slate-100 p-1 rounded-2xl">
+          <nav className={`grid gap-1.5 bg-slate-100 p-1 rounded-2xl ${isAdmin ? 'grid-cols-3' : 'grid-cols-2'}`}>
             <button
               onClick={() => setActiveTab('generate')}
-              className={`flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-xs font-extrabold transition-all active:scale-[0.97] ${
+              className={`flex items-center justify-center gap-1.5 py-2 px-1 rounded-xl text-xs font-extrabold transition-all active:scale-[0.97] ${
                 activeTab === 'generate'
                   ? 'bg-white text-emerald-800 shadow-sm'
                   : 'text-slate-600'
               }`}
             >
-              <PlusCircle className="w-4 h-4 text-emerald-600" />
-              <span>Generate QR</span>
+              <PlusCircle className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+              <span className="truncate">Generate</span>
             </button>
 
             <button
               onClick={() => setActiveTab('manage')}
-              className={`flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-xs font-extrabold transition-all active:scale-[0.97] ${
+              className={`flex items-center justify-center gap-1.5 py-2 px-1 rounded-xl text-xs font-extrabold transition-all active:scale-[0.97] ${
                 activeTab === 'manage'
                   ? 'bg-white text-emerald-800 shadow-sm'
                   : 'text-slate-600'
               }`}
             >
-              <ListFilter className="w-4 h-4 text-emerald-600" />
-              <span>Manage List</span>
+              <ListFilter className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+              <span className="truncate">QR List</span>
             </button>
+
+            {isAdmin && (
+              <button
+                onClick={() => setActiveTab('users')}
+                className={`flex items-center justify-center gap-1.5 py-2 px-1 rounded-xl text-xs font-extrabold transition-all active:scale-[0.97] ${
+                  activeTab === 'users'
+                    ? 'bg-white text-emerald-800 shadow-sm'
+                    : 'text-slate-600'
+                }`}
+              >
+                <Users className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                <span className="truncate">Users</span>
+              </button>
+            )}
           </nav>
         </div>
 

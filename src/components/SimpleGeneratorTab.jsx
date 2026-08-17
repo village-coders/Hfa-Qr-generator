@@ -7,8 +7,10 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { API_ENDPOINTS, getScanUrl } from '../config/api';
+import { useAuth } from '../context/AuthContext';
 
 export default function SimpleGeneratorTab({ onGoToManage }) {
+  const { user, token } = useAuth();
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedQR, setGeneratedQR] = useState(null);
   const [uploadingDoc, setUploadingDoc] = useState(false);
@@ -18,7 +20,7 @@ export default function SimpleGeneratorTab({ onGoToManage }) {
   const fileInputRef = useRef(null);
   const qrWrapperRef = useRef(null); // wraps the QRCodeCanvas div
 
-  // 1. Generate QR code with ZERO initial details required
+  // 1. Generate QR code with creator info recorded
   const handleGenerateQR = async () => {
     setIsGenerating(true);
     setStatusMsg({ type: '', text: '' });
@@ -26,8 +28,14 @@ export default function SimpleGeneratorTab({ onGoToManage }) {
     try {
       const res = await fetch(API_ENDPOINTS.QR_CODES, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}), // No details required!
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          createdByName: user?.name || user?.username || 'Admin',
+          createdBy: user?._id,
+        }),
       });
 
       const json = await res.json();

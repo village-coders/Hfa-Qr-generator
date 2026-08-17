@@ -9,6 +9,10 @@ export const API_ENDPOINTS = {
   QR_CODE_ATTACHMENTS: (id) => `${API_BASE_URL}/qrcodes/${id}/attachments`,
   QR_CODE_ATTACHMENT_DELETE: (id, attId) => `${API_BASE_URL}/qrcodes/${id}/attachments/${attId}`,
   
+  // Users (Admin only)
+  USERS: `${API_BASE_URL}/users`,
+  USER_BY_ID: (id) => `${API_BASE_URL}/users/${id}`,
+
   // File streaming from GridFS
   FILE_STREAM: (fileId) => `${API_BASE_URL}/files/${fileId}`,
 };

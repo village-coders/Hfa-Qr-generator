@@ -5,11 +5,12 @@ import LoginPage from './pages/LoginPage';
 import WhiteGreenHeader from './components/WhiteGreenHeader';
 import SimpleGeneratorTab from './components/SimpleGeneratorTab';
 import ManageListTab from './components/ManageListTab';
+import UserManagementTab from './components/UserManagementTab';
 import PublicScanPage from './pages/PublicScanPage';
 
 function Dashboard() {
-  const { isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState('generate'); // 'generate' | 'manage'
+  const { isAuthenticated, isAdmin } = useAuth();
+  const [activeTab, setActiveTab] = useState('generate'); // 'generate' | 'manage' | 'users'
 
   if (!isAuthenticated) {
     return <LoginPage />;
@@ -26,6 +27,9 @@ function Dashboard() {
         {activeTab === 'manage' && (
           <ManageListTab onGoToGenerate={() => setActiveTab('generate')} />
         )}
+        {activeTab === 'users' && isAdmin && (
+          <UserManagementTab />
+        )}
       </main>
     </div>
   );
@@ -39,7 +43,7 @@ export default function App() {
         <Route path="/scan/:codeId" element={<PublicScanPage />} />
         <Route path="/view/:codeId" element={<PublicScanPage />} />
 
-        {/* Protected Dashboard with Login & 2 Tabs */}
+        {/* Protected Dashboard */}
         <Route path="*" element={<Dashboard />} />
       </Routes>
     </AuthProvider>
