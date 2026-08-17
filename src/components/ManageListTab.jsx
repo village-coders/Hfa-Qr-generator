@@ -3,7 +3,7 @@ import { QRCodeCanvas } from 'qrcode.react';
 import { 
   Download, UploadCloud, FileText, Trash2, ExternalLink, 
   RefreshCw, Plus, CheckCircle2, AlertCircle, Eye, File,
-  Image as ImageIcon, FileSpreadsheet, X, Loader2
+  Image as ImageIcon, FileSpreadsheet, X, Loader2, User
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { API_ENDPOINTS, getScanUrl } from '../config/api';

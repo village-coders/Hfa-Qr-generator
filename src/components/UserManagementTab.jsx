@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Users, UserPlus, Trash2, Shield, User, Mail, 
-  CheckCircle2, AlertCircle, RefreshCw, X, Loader2, KeyRound, Building
+  CheckCircle2, AlertCircle, RefreshCw, X, Loader2, KeyRound, Building, LogIn
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { API_ENDPOINTS } from '../config/api';
 import { useAuth } from '../context/AuthContext';
 
 export default function UserManagementTab() {
-  const { user: currentUser, token, isAdmin } = useAuth();
+  const { user: currentUser, token, isAdmin, logout } = useAuth();
   const [usersList, setUsersList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusMsg, setStatusMsg] = useState({ type: '', text: '' });
@@ -29,6 +29,7 @@ export default function UserManagementTab() {
     setLoading(true);
     try {
       const res = await fetch(`${API_ENDPOINTS.USERS}?limit=100`, {
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
@@ -36,7 +37,12 @@ export default function UserManagementTab() {
       });
 
       const json = await res.json();
-      if (json.success) {
+      if (res.status === 401) {
+        setStatusMsg({ 
+          type: 'error', 
+          text: 'Session expired or missing authorization token. Please log out and sign in again.' 
+        });
+      } else if (json.success) {
         setUsersList(json.data || []);
       } else {
         setStatusMsg({ type: 'error', text: json.message || 'Failed to load users.' });
@@ -68,6 +74,7 @@ export default function UserManagementTab() {
     try {
       const res = await fetch(API_ENDPOINTS.USERS, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
@@ -113,6 +120,7 @@ export default function UserManagementTab() {
     try {
       const res = await fetch(API_ENDPOINTS.USER_BY_ID(userToDelete._id), {
         method: 'DELETE',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
@@ -173,18 +181,29 @@ export default function UserManagementTab() {
       {/* Alert */}
       {statusMsg.text && (
         <div
-          className={`mb-6 p-4 rounded-2xl text-xs sm:text-sm flex items-center gap-3 border ${
+          className={`mb-6 p-4 rounded-2xl text-xs sm:text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 border ${
             statusMsg.type === 'error'
               ? 'bg-rose-50 border-rose-200 text-rose-700'
               : 'bg-emerald-50 border-emerald-200 text-emerald-800'
           }`}
         >
-          {statusMsg.type === 'error' ? (
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
-          ) : (
-            <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-emerald-600" />
+          <div className="flex items-center gap-3">
+            {statusMsg.type === 'error' ? (
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+            ) : (
+              <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-emerald-600" />
+            )}
+            <span>{statusMsg.text}</span>
+          </div>
+          {!token && (
+            <button
+              onClick={logout}
+              className="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow self-start sm:self-auto flex items-center gap-1.5"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Log In Again</span>
+            </button>
           )}
-          <span>{statusMsg.text}</span>
         </div>
       )}
 
