@@ -16,6 +16,8 @@ export default function ManageListTab({ onGoToGenerate }) {
   // Modals state
   const [selectedQRForChange, setSelectedQRForChange] = useState(null);
   const [previewQR, setPreviewQR] = useState(null); // Full size QR modal
+  const [deleteTargetCodeId, setDeleteTargetCodeId] = useState(null); // Delete confirmation modal
+  const [deletingQR, setDeletingQR] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -108,22 +110,33 @@ export default function ManageListTab({ onGoToGenerate }) {
     }
   };
 
-  // Delete QR Code
-  const handleDeleteQR = async (codeId) => {
-    if (!window.confirm(`Are you sure you want to delete QR Code ${codeId}?`)) return;
+  // Open Delete Confirmation Modal
+  const handleDeleteQR = (codeId) => {
+    setDeleteTargetCodeId(codeId);
+  };
 
+  // Execute Delete QR Code
+  const confirmDeleteQR = async () => {
+    if (!deleteTargetCodeId) return;
+
+    setDeletingQR(true);
     try {
-      const res = await fetch(API_ENDPOINTS.QR_CODE_BY_ID(codeId), {
+      const res = await fetch(API_ENDPOINTS.QR_CODE_BY_ID(deleteTargetCodeId), {
         method: 'DELETE',
       });
       const json = await res.json();
       if (json.success) {
-        setStatusMsg({ type: 'success', text: `QR Code ${codeId} deleted.` });
+        setStatusMsg({ type: 'success', text: `QR Code ${deleteTargetCodeId} deleted.` });
+        setDeleteTargetCodeId(null);
         fetchQRCodes();
         setTimeout(() => setStatusMsg({ type: '', text: '' }), 3000);
+      } else {
+        setStatusMsg({ type: 'error', text: json.message || 'Failed to delete.' });
       }
     } catch (err) {
-      setStatusMsg({ type: 'error', text: 'Failed to delete.' });
+      setStatusMsg({ type: 'error', text: 'Failed to delete QR code.' });
+    } finally {
+      setDeletingQR(false);
     }
   };
 
@@ -562,6 +575,48 @@ export default function ManageListTab({ onGoToGenerate }) {
               )}
             </button>
 
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteTargetCodeId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 max-w-sm w-full shadow-2xl relative text-center">
+            <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center bg-rose-50 text-rose-600 border border-rose-200">
+              <Trash2 className="w-7 h-7" />
+            </div>
+
+            <h3 className="text-lg font-bold text-slate-900 mb-2">Delete QR Code</h3>
+            <p className="text-xs sm:text-sm text-slate-500 leading-relaxed mb-6">
+              Are you sure you want to permanently delete QR Code <strong className="text-slate-800 font-mono font-bold">{deleteTargetCodeId}</strong> and its linked documents?
+            </p>
+
+            <div className="flex gap-2.5">
+              <button
+                type="button"
+                disabled={deletingQR}
+                onClick={() => setDeleteTargetCodeId(null)}
+                className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-xs sm:text-sm transition-all disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={deletingQR}
+                onClick={confirmDeleteQR}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+              >
+                {deletingQR ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <span>Yes, Delete</span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

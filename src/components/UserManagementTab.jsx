@@ -39,6 +39,17 @@ export default function UserManagementTab() {
     active: true,
   });
 
+  // Modal alert / confirmation state
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    type: 'confirm', // 'confirm' | 'warning'
+    title: '',
+    message: '',
+    onConfirm: null,
+    confirmText: 'Confirm',
+    confirmColor: 'rose',
+  });
+
   const openEditModal = (u) => {
     setEditingUser(u);
     setEditForm({
@@ -134,37 +145,52 @@ export default function UserManagementTab() {
     }
   };
 
-  const handleDeleteUser = async (userToDelete) => {
+  const handleDeleteUser = (userToDelete) => {
     if (userToDelete._id === currentUser?._id || userToDelete.username === currentUser?.username) {
-      alert('You cannot delete your own QR admin account.');
-      return;
-    }
-
-    if (!window.confirm(`Are you sure you want to delete QR user "${userToDelete.name}" (@${userToDelete.username})?`)) {
-      return;
-    }
-
-    try {
-      const res = await fetch(API_ENDPOINTS.QR_USER_BY_ID(userToDelete._id), {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
+      setConfirmModal({
+        isOpen: true,
+        type: 'warning',
+        title: 'Action Not Allowed',
+        message: 'You cannot delete your own QR admin account.',
+        confirmText: 'Understood',
+        confirmColor: 'emerald',
+        onConfirm: () => setConfirmModal((prev) => ({ ...prev, isOpen: false })),
       });
-
-      const json = await res.json();
-      if (json.success) {
-        setStatusMsg({ type: 'success', text: `QR User "${userToDelete.name}" deleted.` });
-        fetchUsers();
-        setTimeout(() => setStatusMsg({ type: '', text: '' }), 3000);
-      } else {
-        setStatusMsg({ type: 'error', text: json.message || 'Failed to delete QR user.' });
-      }
-    } catch (err) {
-      setStatusMsg({ type: 'error', text: 'Error deleting QR user.' });
+      return;
     }
+
+    setConfirmModal({
+      isOpen: true,
+      type: 'confirm',
+      title: 'Delete QR User',
+      message: `Are you sure you want to permanently delete user "${userToDelete.name}" (@${userToDelete.username})? This action cannot be undone.`,
+      confirmText: 'Yes, Delete User',
+      confirmColor: 'rose',
+      onConfirm: async () => {
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+        try {
+          const res = await fetch(API_ENDPOINTS.QR_USER_BY_ID(userToDelete._id), {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+            },
+          });
+
+          const json = await res.json();
+          if (json.success) {
+            setStatusMsg({ type: 'success', text: `QR User "${userToDelete.name}" deleted.` });
+            fetchUsers();
+            setTimeout(() => setStatusMsg({ type: '', text: '' }), 3000);
+          } else {
+            setStatusMsg({ type: 'error', text: json.message || 'Failed to delete QR user.' });
+          }
+        } catch (err) {
+          setStatusMsg({ type: 'error', text: 'Error deleting QR user.' });
+        }
+      },
+    });
   };
 
   const handleEditUser = async (e) => {
@@ -742,6 +768,57 @@ export default function UserManagementTab() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Reusable Confirm / Alert Modal */}
+      {confirmModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 max-w-sm w-full shadow-2xl relative text-center">
+            <div className={`w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center border ${
+              confirmModal.type === 'warning'
+                ? 'bg-amber-50 text-amber-600 border-amber-200'
+                : 'bg-rose-50 text-rose-600 border-rose-200'
+            }`}>
+              {confirmModal.type === 'warning' ? (
+                <AlertCircle className="w-7 h-7" />
+              ) : (
+                <Trash2 className="w-7 h-7" />
+              )}
+            </div>
+
+            <h3 className="text-lg font-bold text-slate-900 mb-2">{confirmModal.title}</h3>
+            <p className="text-xs sm:text-sm text-slate-500 leading-relaxed mb-6">{confirmModal.message}</p>
+
+            <div className="flex gap-2.5">
+              {confirmModal.type !== 'warning' && (
+                <button
+                  type="button"
+                  onClick={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+                  className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-xs sm:text-sm transition-all"
+                >
+                  Cancel
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirmModal.onConfirm) {
+                    confirmModal.onConfirm();
+                  } else {
+                    setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+                  }
+                }}
+                className={`flex-1 py-2.5 px-4 rounded-xl text-white font-bold text-xs sm:text-sm shadow-md transition-all active:scale-95 ${
+                  confirmModal.confirmColor === 'emerald'
+                    ? 'bg-emerald-600 hover:bg-emerald-700'
+                    : 'bg-rose-600 hover:bg-rose-700'
+                }`}
+              >
+                {confirmModal.confirmText}
+              </button>
+            </div>
           </div>
         </div>
       )}
