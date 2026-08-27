@@ -98,6 +98,11 @@ export default function SimpleGeneratorTab({ onGoToManage }) {
   const handleUploadDocument = async (file) => {
     if (!file || !generatedQR) return;
 
+    if (file.size > 30 * 1024 * 1024) {
+      setStatusMsg({ type: 'error', text: 'File too large. Maximum upload size is 30 MB per file.' });
+      return;
+    }
+
     setUploadingDoc(true);
     setStatusMsg({ type: 'info', text: 'Uploading document to MongoDB GridFS...' });
 

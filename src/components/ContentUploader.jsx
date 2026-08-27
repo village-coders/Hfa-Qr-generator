@@ -116,13 +116,18 @@ export default function ContentUploader({ qrData, onUpdateSuccess, onLivePreview
   const handleUploadFiles = async (filesList) => {
     if (!filesList || filesList.length === 0) return;
 
+    const file = filesList[0];
+
+    if (file.size > 30 * 1024 * 1024) {
+      setStatusMessage({ type: 'error', text: 'File too large. Maximum upload size is 30 MB per file.' });
+      return;
+    }
+
     setUploadingFiles(true);
-    setStatusMessage({ type: 'info', text: 'Uploading files into MongoDB GridFS...' });
+    setStatusMessage({ type: 'info', text: 'Uploading file into MongoDB GridFS...' });
 
     const uploadFormData = new FormData();
-    for (let i = 0; i < filesList.length; i++) {
-      uploadFormData.append('files', filesList[i]);
-    }
+    uploadFormData.append('file', file);
 
     try {
       const res = await fetch(API_ENDPOINTS.QR_CODE_ATTACHMENTS(qrData.codeId), {
@@ -338,7 +343,7 @@ export default function ContentUploader({ qrData, onUpdateSuccess, onLivePreview
               {uploadingFiles ? 'Streaming to MongoDB GridFS...' : 'Click to Upload or Drag & Drop Documents'}
             </h3>
             <p className="text-xs text-slate-400 max-w-sm">
-              Upload PDF manuals, warranties, invoices, spec sheets, diagrams, or high-res photos (up to 10MB per file).
+              Upload PDF manuals, warranties, invoices, spec sheets, diagrams, or high-res photos (up to 30MB per file).
             </p>
             <div className="flex items-center gap-2 mt-4 text-[11px] text-emerald-400/80 font-mono bg-emerald-500/5 px-3 py-1 rounded-full border border-emerald-500/10">
               <Sparkles className="w-3.5 h-3.5" />
