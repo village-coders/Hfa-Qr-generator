@@ -18,8 +18,14 @@ export const API_ENDPOINTS = {
   QR_CODE_ATTACHMENTS: (id) => `${API_BASE_URL}/qrcodes/${id}/attachments`,
   QR_CODE_ATTACHMENT_DELETE: (id, attId) => `${API_BASE_URL}/qrcodes/${id}/attachments/${attId}`,
 
-  // File streaming from GridFS
-  FILE_STREAM: (fileId) => `${API_BASE_URL}/files/${fileId}`,
+  // File streaming from S3 / GridFS
+  FILE_STREAM: (fileId) => {
+    if (!fileId) return '';
+    if (fileId.startsWith('/api/files/s3/') || fileId.startsWith('/api/v1/files/s3/')) {
+      return `${API_BASE_URL}/files/s3/${fileId.replace(/^\/api\/(?:v1\/)?files\/s3\//, '')}`;
+    }
+    return `${API_BASE_URL}/files/${fileId}`;
+  },
 };
 
 export const getScanUrl = (codeId) => {
