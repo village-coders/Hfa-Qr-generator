@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { 
   Download, UploadCloud, FileText, Trash2, ExternalLink, 
   RefreshCw, Plus, CheckCircle2, AlertCircle, Eye, File,
-  Image as ImageIcon, FileSpreadsheet, X, Loader2, User
+  Image as ImageIcon, FileSpreadsheet, X, Loader2, User,
+  Search, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { API_ENDPOINTS, getScanUrl } from '../config/api';
@@ -12,6 +13,9 @@ export default function ManageListTab({ onGoToGenerate }) {
   const [qrList, setQrList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusMsg, setStatusMsg] = useState({ type: '', text: '' });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   
   // Modals state
   const [selectedQRForChange, setSelectedQRForChange] = useState(null);
@@ -39,6 +43,51 @@ export default function ManageListTab({ onGoToGenerate }) {
   useEffect(() => {
     fetchQRCodes();
   }, []);
+
+  const filteredQRCodes = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return qrList;
+    return qrList.filter((qr) => {
+      const docName = qr.attachments?.[0]?.fileName || '';
+      return (
+        (qr.codeId || '').toLowerCase().includes(q) ||
+        (qr.title || '').toLowerCase().includes(q) ||
+        (qr.createdByName || '').toLowerCase().includes(q) ||
+        docName.toLowerCase().includes(q)
+      );
+    });
+  }, [qrList, searchQuery]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredQRCodes.length / pageSize));
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, pageSize]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  const paginatedQRCodes = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredQRCodes.slice(start, start + pageSize);
+  }, [filteredQRCodes, currentPage, pageSize]);
+
+  const pageNumbers = useMemo(() => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    const pages = [1];
+    if (currentPage > 3) pages.push('...');
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+    for (let i = start; i <= end; i++) pages.push(i);
+    if (currentPage < totalPages - 2) pages.push('...');
+    pages.push(totalPages);
+    return pages;
+  }, [totalPages, currentPage]);
 
   // Download QR Code PNG (Trimmed exact black QR with no padding or text)
   const handleDownloadQR = (codeId) => {
@@ -84,7 +133,7 @@ export default function ManageListTab({ onGoToGenerate }) {
     }
 
     setUploadingDoc(true);
-    setStatusMsg({ type: 'info', text: 'Updating document in MongoDB GridFS...' });
+    setStatusMsg({ type: 'info', text: 'Uploading new document...' });
 
     const formData = new FormData();
     formData.append('file', file);
@@ -197,6 +246,50 @@ export default function ManageListTab({ onGoToGenerate }) {
         </div>
       )}
 
+      {/* Search & Filter Toolbar */}
+      {!loading && qrList.length > 0 && (
+        <div className="mb-5 bg-white border border-slate-200 rounded-2xl p-3 sm:p-4 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by Code ID, document name, or creator..."
+              className="w-full pl-10 pr-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-emerald-500 transition-colors"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-lg"
+                title="Clear search"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between sm:justify-end gap-3 text-xs text-slate-500">
+            <span className="font-medium whitespace-nowrap">
+              {filteredQRCodes.length === 0
+                ? '0 results'
+                : `Showing ${(currentPage - 1) * pageSize + 1}–${Math.min(currentPage * pageSize, filteredQRCodes.length)} of ${filteredQRCodes.length}`}
+            </span>
+            <select
+              value={pageSize}
+              onChange={(e) => setPageSize(Number(e.target.value))}
+              aria-label="Items per page"
+              className="px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-emerald-500"
+            >
+              <option value={10}>10 / page</option>
+              <option value={25}>25 / page</option>
+              <option value={50}>50 / page</option>
+            </select>
+          </div>
+        </div>
+      )}
+
       {/* Main List Container */}
       {loading ? (
         <div className="py-16 flex flex-col items-center justify-center text-slate-400 bg-white rounded-3xl border border-slate-200 shadow-sm">
@@ -217,11 +310,25 @@ export default function ManageListTab({ onGoToGenerate }) {
             Generate QR Code
           </button>
         </div>
+      ) : filteredQRCodes.length === 0 ? (
+        <div className="py-16 text-center px-4 bg-white rounded-3xl border border-slate-200 shadow-sm">
+          <Search className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+          <h3 className="text-lg font-bold text-slate-800">No matching QR codes</h3>
+          <p className="text-xs sm:text-sm text-slate-500 max-w-sm mx-auto mt-1 mb-6">
+            No QR codes matched "{searchQuery}". Try a different Code ID, filename, or creator.
+          </p>
+          <button
+            onClick={() => setSearchQuery('')}
+            className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm rounded-xl transition-colors"
+          >
+            Clear Search
+          </button>
+        </div>
       ) : (
         <>
           {/* MOBILE CARDS VIEW (Visible on small screens) */}
           <div className="md:hidden space-y-4">
-            {qrList.map((qr) => {
+            {paginatedQRCodes.map((qr) => {
               const doc = qr.attachments?.[0];
               const scanUrl = getScanUrl(qr.codeId);
 
@@ -343,7 +450,7 @@ export default function ManageListTab({ onGoToGenerate }) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-sm">
-                  {qrList.map((qr) => {
+                  {paginatedQRCodes.map((qr) => {
                     const doc = qr.attachments?.[0];
                     const scanUrl = getScanUrl(qr.codeId);
 
@@ -473,6 +580,59 @@ export default function ManageListTab({ onGoToGenerate }) {
               </table>
             </div>
           </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 bg-white border border-slate-200 rounded-2xl px-4 py-3 shadow-sm">
+              <p className="text-xs text-slate-500 font-medium">
+                Page <span className="font-bold text-slate-800">{currentPage}</span> of{' '}
+                <span className="font-bold text-slate-800">{totalPages}</span>
+              </p>
+
+              <div className="flex items-center gap-1.5 flex-wrap justify-center">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span>Prev</span>
+                </button>
+
+                {pageNumbers.map((page, idx) =>
+                  page === '...' ? (
+                    <span key={`ellipsis-${idx}`} className="px-2 text-xs text-slate-400 select-none">
+                      ...
+                    </span>
+                  ) : (
+                    <button
+                      key={page}
+                      type="button"
+                      onClick={() => setCurrentPage(page)}
+                      className={`min-w-[32px] h-8 px-2.5 rounded-xl text-xs font-bold transition-colors ${
+                        currentPage === page
+                          ? 'bg-emerald-600 text-white shadow-sm'
+                          : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  )
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                >
+                  <span>Next</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
         </>
       )}
 
