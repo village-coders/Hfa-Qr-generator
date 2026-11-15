@@ -13,11 +13,15 @@ export const AuthProvider = ({ children }) => {
     return localStorage.getItem('qr_portal_token') || '';
   });
 
-  const login = async (username, password) => {
+  const login = async (username, password, recaptchaToken) => {
     const res = await fetch(API_ENDPOINTS.QR_AUTH_LOGIN, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({
+        username,
+        password,
+        ...(recaptchaToken ? { recaptchaToken } : {}),
+      }),
     });
 
     const json = await res.json();

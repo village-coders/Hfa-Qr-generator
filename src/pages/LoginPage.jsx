@@ -1,13 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Lock, User, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import RecaptchaWidget from '../components/RecaptchaWidget';
+
+const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '';
 
 export default function LoginPage() {
   const { login } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [recaptchaToken, setRecaptchaToken] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const recaptchaRef = useRef(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,13 +21,20 @@ export default function LoginPage() {
       return;
     }
 
+    if (RECAPTCHA_SITE_KEY && !recaptchaToken) {
+      setError('Please complete the reCAPTCHA verification.');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
     try {
-      await login(username.trim(), password);
+      await login(username.trim(), password, RECAPTCHA_SITE_KEY ? recaptchaToken : undefined);
     } catch (err) {
       setError(err.message || 'Login failed. Please verify credentials.');
+      setRecaptchaToken('');
+      recaptchaRef.current?.reset();
     } finally {
       setLoading(false);
     }
@@ -90,6 +102,18 @@ export default function LoginPage() {
               />
             </div>
           </div>
+
+          {RECAPTCHA_SITE_KEY && (
+            <div className="pt-1">
+              <RecaptchaWidget
+                ref={recaptchaRef}
+                siteKey={RECAPTCHA_SITE_KEY}
+                theme="light"
+                onChange={(token) => setRecaptchaToken(token)}
+                onExpired={() => setRecaptchaToken('')}
+              />
+            </div>
+          )}
 
           <button
             type="submit"
